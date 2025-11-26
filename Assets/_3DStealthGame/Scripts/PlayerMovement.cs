@@ -17,7 +17,6 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         m_Rigidbody = GetComponent<Rigidbody>();
-        // Cambiado a GetComponentInChildren por si el Animator está en el hijo "munequita"
         m_Animator = GetComponentInChildren<Animator>();
 
         if (m_Animator == null)
@@ -27,9 +26,7 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             Debug.Log("[PlayerMovement] Animator encontrado: " + m_Animator.gameObject.name);
-            // Asegurar modo de animación para física (opcional pero recomendable si usas Rigidbody en FixedUpdate)
             m_Animator.updateMode = AnimatorUpdateMode.Fixed;
-            // Si vas a mover por Rigidbody, recomiendo DESACTIVAR Apply Root Motion en el inspector
             m_Animator.applyRootMotion = false;
         }
 
@@ -39,7 +36,6 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            // Evitar rotaciones indeseadas
             m_Rigidbody.constraints = RigidbodyConstraints.FreezeRotationX |
                                        RigidbodyConstraints.FreezeRotationZ;
         }
@@ -51,14 +47,13 @@ public class PlayerMovement : MonoBehaviour
     {
         m_InputVector = MoveAction.ReadValue<Vector2>();
 
-        // Debug para ver qué valores llegan
         if (m_InputVector.sqrMagnitude > 0.0001f)
             Debug.Log($"[Input] x:{m_InputVector.x:F2} y:{m_InputVector.y:F2} mag:{m_InputVector.magnitude:F2}");
     }
 
     void FixedUpdate()
     {
-        bool isMoving = m_InputVector.magnitude > 0.1f; // umbral configurable
+        bool isMoving = m_InputVector.magnitude > 0.1f; 
 
         if (isMoving)
         {
@@ -81,12 +76,9 @@ public class PlayerMovement : MonoBehaviour
 
         if (m_Animator != null)
         {
-            // Usa la magnitud real; si quieres que reaccione más fácil baja la condición >0.5 en el animator
             float speedParam = m_InputVector.magnitude;
             m_Animator.SetFloat("Speed", speedParam);
-            // debug del parámetro
-            // sólo mostrar cada cierto tiempo para no spamear mucho:
-            // Debug.Log($"[Animator] Speed param set to {speedParam:F2}");
+           
         }
     }
 
