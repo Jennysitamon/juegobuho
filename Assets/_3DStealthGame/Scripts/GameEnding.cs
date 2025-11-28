@@ -6,21 +6,53 @@ using System.Collections;
 public class GameEnding : MonoBehaviour
 {
     public float fadeDuration = 1f;
-    public float displayImageDuration = 0.4f;
+    public float displayImageDuration = 0.6f;
     public UIDocument uiDocument;
+    public AudioSource exitAudio;
+    public AudioSource caughtAudio;
+    private bool m_HasAudioPlayed = false;
 
     private bool m_HasEnded;
 
+    private VisualElement m_EndScreen;
     private VisualElement m_CaughtScreen;
+
+    private bool m_PlayerAtExit = false;
 
     void Start()
     {
-        m_CaughtScreen = uiDocument.rootVisualElement.Q<VisualElement>("CaughtScreen");
+        var root = uiDocument.rootVisualElement;
+
+        m_EndScreen = root.Q<VisualElement>("EndScreen");
+        m_CaughtScreen = root.Q<VisualElement>("CaughtScreen");
+
+        if (m_EndScreen != null)
+        {
+            m_EndScreen.style.display = DisplayStyle.None;
+            m_EndScreen.style.opacity = 0;
+        }
 
         if (m_CaughtScreen != null)
         {
             m_CaughtScreen.style.display = DisplayStyle.None;
             m_CaughtScreen.style.opacity = 0;
+        }
+
+        Debug.Log($"[GameEnding] EndScreen: {m_EndScreen != null}, CaughtScreen: {m_CaughtScreen != null}");
+    }
+
+    
+    private void OnTriggerEnter(Collider other)
+    {
+        if (!other.CompareTag("Player")) return;
+
+        Debug.Log("[GameEnding] Player llegó a la salida → Activar EndScreen");
+        m_PlayerAtExit = true;
+
+        if (!m_HasEnded)
+        {
+            m_HasEnded = true;
+            StartCoroutine(ShowScreen(m_EndScreen, false, exitAudio));
         }
     }
 
@@ -28,39 +60,53 @@ public class GameEnding : MonoBehaviour
     {
         if (m_HasEnded) return;
 
-        Debug.Log("[GameEnding] MOSTRANDO pantalla CaughtScreen");
+        Debug.Log("[GameEnding] ¡Jugador atrapado! → Mostrar CaughtScreen");
         m_HasEnded = true;
 
-        StartCoroutine(ShowCaughtScreen());
+        StartCoroutine(ShowScreen(m_CaughtScreen, true, caughtAudio));
     }
 
-    IEnumerator ShowCaughtScreen()
+    IEnumerator ShowScreen(VisualElement screen, bool restart, AudioSource audioSource)
     {
-        if (m_CaughtScreen == null)
+        if (screen == null)
         {
-            Debug.LogError("CaughtScreen ES NULL en UI Toolkit!");
+            Debug.LogError("[GameEnding] La pantalla es NULL!");
             yield break;
         }
 
-        // Mostrar pantalla
-        m_CaughtScreen.style.display = DisplayStyle.Flex;
+        if (!m_HasAudioPlayed && audioSource != null)
+        {
+            audioSource.Play();
+            m_HasAudioPlayed = true;
+        }
 
-        float timer = 0f;
+        screen.style.display = DisplayStyle.Flex;
 
-        // Fade In
+        float timer = 0;
+
         while (timer < fadeDuration)
         {
             timer += Time.deltaTime;
-            m_CaughtScreen.style.opacity = Mathf.Clamp01(timer / fadeDuration);
+            screen.style.opacity = Mathf.Clamp01(timer / fadeDuration);
             yield return null;
         }
 
-        m_CaughtScreen.style.opacity = 1;
+        // Asegurar opacidad total
+        screen.style.opacity = 1;
 
-        // Esperarr
         yield return new WaitForSeconds(displayImageDuration);
 
-        // Reiniciar escena
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        if (restart)
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+        else
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
     }
 }

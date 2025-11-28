@@ -21,7 +21,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (m_Animator == null)
         {
-            Debug.LogError("[PlayerMovement] No se encontró Animator en Player ni en sus hijos!");
+            Debug.LogError("[PlayerMovement] No se encontró Animator en Player ");
         }
         else
         {
