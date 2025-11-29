@@ -19,6 +19,10 @@ public class GameEnding : MonoBehaviour
 
     private bool m_PlayerAtExit = false;
 
+    private float m_Demo_GameTimer = 0f;
+    private bool m_Demo_GameTimerIsTicking = false;
+    private Label m_Demo_GameTimerLabel;
+
     void Start()
     {
         var root = uiDocument.rootVisualElement;
@@ -39,15 +43,31 @@ public class GameEnding : MonoBehaviour
         }
 
         Debug.Log($"[GameEnding] EndScreen: {m_EndScreen != null}, CaughtScreen: {m_CaughtScreen != null}");
+
+        m_Demo_GameTimerLabel = root.Q<Label>("TimerLabel");
+        m_Demo_GameTimer = 0f;
+        m_Demo_GameTimerIsTicking = true;
+        Demo_UpdateTimerLabel();
     }
 
-    
+    void Update()
+    {
+      
+        if (m_Demo_GameTimerIsTicking)
+        {
+            m_Demo_GameTimer += Time.deltaTime;
+            Demo_UpdateTimerLabel();
+        }
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
 
         Debug.Log("[GameEnding] Player llegó a la salida → Activar EndScreen");
         m_PlayerAtExit = true;
+
+        m_Demo_GameTimerIsTicking = false;
 
         if (!m_HasEnded)
         {
@@ -60,8 +80,10 @@ public class GameEnding : MonoBehaviour
     {
         if (m_HasEnded) return;
 
-        Debug.Log("[GameEnding] ¡Jugador atrapado! → Mostrar CaughtScreen");
+        Debug.Log("[GameEnding] ¡Jugador atrapado!");
         m_HasEnded = true;
+
+        m_Demo_GameTimerIsTicking = false;
 
         StartCoroutine(ShowScreen(m_CaughtScreen, true, caughtAudio));
     }
@@ -91,7 +113,6 @@ public class GameEnding : MonoBehaviour
             yield return null;
         }
 
-        // Asegurar opacidad total
         screen.style.opacity = 1;
 
         yield return new WaitForSeconds(displayImageDuration);
@@ -107,6 +128,13 @@ public class GameEnding : MonoBehaviour
 #else
             Application.Quit();
 #endif
+        }
+    }
+    void Demo_UpdateTimerLabel()
+    {
+        if (m_Demo_GameTimerLabel != null)
+        {
+            m_Demo_GameTimerLabel.text = m_Demo_GameTimer.ToString("0.00");
         }
     }
 }

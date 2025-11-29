@@ -13,6 +13,9 @@ public class PlayerMovement : MonoBehaviour
     Rigidbody m_Rigidbody;
     Animator m_Animator;
     Vector2 m_InputVector;
+    //llave
+    private List<string> m_OwnedKeys = new List<string>();
+
 
     void Start()
     {
@@ -86,4 +89,15 @@ public class PlayerMovement : MonoBehaviour
     {
         MoveAction.Disable();
     }
+
+    public void AddKey(string keyName)
+{
+    m_OwnedKeys.Add(keyName);
+    Debug.Log("[PlayerMovement] Llave recogida: " + keyName);
+}
+
+public bool OwnKey(string keyName)
+{
+    return m_OwnedKeys.Contains(keyName);
+}
 }
